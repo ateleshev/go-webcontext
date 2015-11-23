@@ -53,9 +53,19 @@ func filepath(dir string, config iConfig) string { // {{{
 	return path.Join(dir, fmt.Sprintf("%s.%s", config.Name(), configType))
 } // }}}
 
+// [iConfig]
+
+type iConfig interface {
+	Name() string
+	Filepath(dir string) string
+	Load(dir string) error
+}
+
 // [config]
 
 type config struct {
+	iConfig
+
 	loaded bool
 }
 
@@ -66,14 +76,6 @@ func (this *config) setLoaded(loaded bool) { // {{{
 func (this *config) IsLoaded() bool { // {{{
 	return this.loaded
 } // }}}
-
-// [iConfig]
-
-type iConfig interface {
-	Name() string
-	Filepath(dir string) string
-	Load(dir string) error
-}
 
 // [Config]
 
