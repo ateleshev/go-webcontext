@@ -102,6 +102,9 @@ func (this *Context) Init(config *Config) error { // {{{
 
 		db.SingularTable(config.Database.SingularTable)
 
+		// Logger [Enable|Disable]
+		db.LogMode(config.Database.LogMode)
+
 		this.SetDB(&db)
 	}
 

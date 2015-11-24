@@ -14,6 +14,7 @@ type DatabaseConfig struct {
 	MaxIdleConns  int
 	MaxOpenConns  int
 	SingularTable bool
+	LogMode       bool
 }
 
 func (this *DatabaseConfig) Name() string {
