@@ -182,7 +182,7 @@ func (this *Context) GetDB() *gorm.DB { // {{{
 
 // [Controllers]
 
-func (this *Context) AddController(controller iController) error { // {{{
+func (this *Context) AddController(controller IController) error { // {{{
 	controller.Initialize(this)
 	if router := this.GetRouter(); router != nil {
 		controller.Register(router).HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
