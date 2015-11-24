@@ -24,7 +24,7 @@ func init() {
 
 func main() {
   var cnt int
-  db := context.GetDB()
+  db := context.DB()
   db.Table("test").Count(&cnt)
   log.Printf("Total rows in table 'test': %d", cnt)
 }

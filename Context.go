@@ -122,7 +122,7 @@ func (this *Context) SetConfig(config *Config) bool { // {{{
 	return true
 } // }}}
 
-func (this *Context) GetConfig() *Config { // {{{
+func (this *Context) Config() *Config { // {{{
 	return this.config
 } // }}}
 
@@ -140,7 +140,7 @@ func (this *Context) SetServer(server *http.Server) bool { // {{{
 	return true
 } // }}}
 
-func (this *Context) GetServer() *http.Server { // {{{
+func (this *Context) Server() *http.Server { // {{{
 	return this.server
 } // }}}
 
@@ -158,7 +158,7 @@ func (this *Context) SetRouter(router *mux.Router) bool { // {{{
 	return true
 } // }}}
 
-func (this *Context) GetRouter() *mux.Router { // {{{
+func (this *Context) Router() *mux.Router { // {{{
 	return this.router
 } // }}}
 
@@ -176,7 +176,7 @@ func (this *Context) SetDB(db *gorm.DB) bool { // {{{
 	return true
 } // }}}
 
-func (this *Context) GetDB() *gorm.DB { // {{{
+func (this *Context) DB() *gorm.DB { // {{{
 	return this.db
 } // }}}
 
@@ -184,7 +184,7 @@ func (this *Context) GetDB() *gorm.DB { // {{{
 
 func (this *Context) AddController(controller IController) error { // {{{
 	controller.Initialize(this)
-	if router := this.GetRouter(); router != nil {
+	if router := this.Router(); router != nil {
 		controller.Register(router).HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			var err error
 			controller.Configure(request)
@@ -231,12 +231,12 @@ func (this *Context) Get(key string) interface{} { // {{{
 // [Handle]
 
 func (this *Context) Handle() { // {{{
-	server := this.GetServer()
-	server.Handler = this.GetRouter()
+	server := this.Server()
+	server.Handler = this.Router()
 } // }}}
 
 func (this *Context) ListenAndServe() { // {{{
-	config := this.GetConfig()
+	config := this.Config()
 	if config.HasMain() && config.Main.IsServerType(SERVER_TYPE_FCGI) {
 		this.fcgiListenAndServe()
 	} else {
@@ -245,7 +245,7 @@ func (this *Context) ListenAndServe() { // {{{
 } // }}}
 
 func (this *Context) fcgiListenAndServe() { // {{{
-	server := this.GetServer()
+	server := this.Server()
 
 	log.Printf("Start FCGI Server (fcgi://%s)", server.Addr)
 	listener, err := net.Listen("tcp", server.Addr)
@@ -258,7 +258,7 @@ func (this *Context) fcgiListenAndServe() { // {{{
 } // }}}
 
 func (this *Context) httpListenAndServe() { // {{{
-	server := this.GetServer()
+	server := this.Server()
 
 	log.Printf("Start HTTP Server (http://%s)", server.Addr)
 	log.Fatal(server.ListenAndServe())
