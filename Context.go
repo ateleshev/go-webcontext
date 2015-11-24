@@ -187,12 +187,13 @@ func (this *Context) AddController(controller iController) error { // {{{
 	if router := this.GetRouter(); router != nil {
 		controller.Register(router).HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			var err error
-			if err = controller.Configure(request); err != nil {
-				log.Printf("Cannot configure controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
+			controller.Configure(request)
+			if err = controller.Prepare(); err != nil {
+				log.Printf("Cannot prepare controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
 				controller.Error(writer)
 			} else {
 				if err = controller.Render(writer); err != nil {
-					log.Printf("Cannot execute controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
+					log.Printf("Cannot render controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
 				}
 			}
 		})

@@ -10,9 +10,7 @@ import (
 )
 
 type WebContentController struct {
-	Controller
-
-	request *http.Request
+	PageController
 }
 
 func NewWebContentController() *WebContentController { // {{{
@@ -23,15 +21,9 @@ func (this *WebContentController) Register(router *mux.Router) *mux.Route { // {
 	return router.NewRoute().PathPrefix("/")
 } // }}}
 
-func (this *WebContentController) Configure(request *http.Request) error { // {{{
-	this.request = request
-
-	return nil
-} // }}}
-
 func (this *WebContentController) Render(writer http.ResponseWriter) error { // {{{
 	dir := path.Join(this.TemplatePath, wp.TEMPLATE_DIR_MAIN, this.TemplateName, wp.TEMPLATE_DIR_WEB)
-	http.FileServer(http.Dir(dir)).ServeHTTP(writer, this.request)
+	http.FileServer(http.Dir(dir)).ServeHTTP(writer, this.Request())
 
 	return nil
 } // }}}
