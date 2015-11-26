@@ -10,14 +10,21 @@ import (
 	"runtime"
 	"sync"
 
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
+
 	"github.com/gorilla/mux" // http://www.gorillatoolkit.org/pkg/mux
 	"github.com/jinzhu/gorm" // https://godoc.org/github.com/jinzhu/gorm
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/ArtemTeleshev/go-repository"
 )
 
 const (
 	DEFAULT_SERVER_ADDR = "0.0.0.0:8090"
+
+	NAMESPACE            = "common"
+	NAMESPACE_REPOSITORY = "repository"
 )
 
 type Context struct {
@@ -31,9 +38,42 @@ type Context struct {
 	data map[string]interface{}
 }
 
+// == Protected ==
+
+func buildKey(NAMESPACE string, name string) string { // {{{
+	return fmt.Sprintf("%s::%s", NAMESPACE, name)
+} // }}}
+
+func (this *Context) has(key string) bool { // {{{
+	_, ok := this.data[key]
+
+	return ok
+} // }}}
+
+func (this *Context) set(key string, value interface{}) bool { // {{{
+	if this.Has(key) {
+		return false
+	}
+
+	this.Lock()
+	defer this.Unlock()
+
+	this.data[key] = value
+
+	return true
+} // }}}
+
+func (this *Context) get(key string) interface{} { // {{{
+	return this.data[key]
+} // }}}
+
+// == Static ==
+
 func NewContext() *Context { // {{{
 	return &Context{data: make(map[string]interface{}, 0)}
 } // }}}
+
+// == Public ==
 
 func CreateContext(configPath string) (*Context, error) { // {{{
 	context := NewContext()
@@ -208,27 +248,34 @@ func (this *Context) AddController(controller IController) error { // {{{
 
 // [Data]
 
-func (this *Context) Has(key string) bool { // {{{
-	_, ok := this.data[key]
-
-	return ok
+func (this *Context) Has(name string) bool { // {{{
+	return this.has(buildKey(NAMESPACE, name))
 } // }}}
 
-func (this *Context) Set(key string, value interface{}) bool { // {{{
-	if this.Has(key) {
-		return false
+func (this *Context) Set(name string, value interface{}) bool { // {{{
+	return this.set(buildKey(NAMESPACE, name), value)
+} // }}}
+
+func (this *Context) Get(name string) interface{} { // {{{
+	return this.get(buildKey(NAMESPACE, name))
+} // }}}
+
+// [Repository]
+
+func (this *Context) HasRepository(name string) bool { // {{{
+	return this.has(buildKey(NAMESPACE_REPOSITORY, name))
+} // }}}
+
+func (this *Context) SetRepository(name string, repository *repository.Repository) bool { // {{{
+	return this.set(buildKey(NAMESPACE_REPOSITORY, name), repository)
+} // }}}
+
+func (this *Context) Repository(name string) *repository.Repository { // {{{
+	if !this.has(buildKey(NAMESPACE_REPOSITORY, name)) {
+		return nil
 	}
 
-	this.Lock()
-	defer this.Unlock()
-
-	this.data[key] = value
-
-	return true
-} // }}}
-
-func (this *Context) Get(key string) interface{} { // {{{
-	return this.data[key]
+	return this.get(buildKey(NAMESPACE_REPOSITORY, name)).(*repository.Repository)
 } // }}}
 
 // [Handle]
