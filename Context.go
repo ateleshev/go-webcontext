@@ -3,16 +3,18 @@ package webcontext
 import (
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"net/http/fcgi"
 	"reflect"
 	"runtime"
 	"sync"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
-	_ "github.com/lib/pq"
-	_ "github.com/mattn/go-sqlite3"
+	// _ "github.com/lib/pq"
+	// _ "github.com/mattn/go-sqlite3"
 
 	"github.com/gorilla/mux" // http://www.gorillatoolkit.org/pkg/mux
 	"github.com/jinzhu/gorm" // https://godoc.org/github.com/jinzhu/gorm
@@ -21,19 +23,26 @@ import (
 )
 
 const (
+	DATE_FORMAT      = "2006-01-02"
+	TIME_FORMAT      = "15:04:05"
+	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
+
 	DEFAULT_SERVER_ADDR = "0.0.0.0:8090"
 
 	NAMESPACE            = "common"
 	NAMESPACE_REPOSITORY = "repository"
+
+	MEMORY_TEMPLATE = "%.3f%s"
 )
 
 type Context struct {
 	sync.Mutex
 
-	config *Config      // App configuration
-	server *http.Server // HttpServer (https://golang.org/pkg/net/http)
-	router *mux.Router  // GorillaMux (http://www.gorillatoolkit.org/pkg/mux)
-	db     *gorm.DB     // GORM (https://godoc.org/github.com/jinzhu/gorm)
+	startedAt time.Time
+	config    *Config      // App configuration
+	server    *http.Server // HttpServer (https://golang.org/pkg/net/http)
+	router    *mux.Router  // GorillaMux (http://www.gorillatoolkit.org/pkg/mux)
+	db        *gorm.DB     // GORM (https://godoc.org/github.com/jinzhu/gorm)
 
 	data map[string]interface{}
 }
@@ -70,7 +79,10 @@ func (this *Context) get(key string) interface{} { // {{{
 // == Static ==
 
 func NewContext() *Context { // {{{
-	return &Context{data: make(map[string]interface{}, 0)}
+	return &Context{
+		startedAt: time.Now(),
+		data:      make(map[string]interface{}, 0),
+	}
 } // }}}
 
 // == Public ==
@@ -149,6 +161,18 @@ func (this *Context) Init(config *Config) error { // {{{
 	}
 
 	return nil
+} // }}}
+
+func (this *Context) StartedAt() time.Time { // {{{
+	return this.startedAt
+} // }}}
+
+func (this *Context) Executed() time.Duration { // {{{
+	return time.Since(this.startedAt)
+} // }}}
+
+func (this *Context) DateTimeFormat() string { // {{{
+	return DATE_TIME_FORMAT
 } // }}}
 
 // [Config]
@@ -317,4 +341,53 @@ func (this *Context) httpListenAndServe() { // {{{
 func (this *Context) Dispatch() { // {{{
 	this.Handle()
 	this.ListenAndServe()
+} // }}}
+
+// [Math]
+
+func (this *Context) Log(v, b float64) float64 { // {{{
+	return math.Log(v) / math.Log(b)
+} // }}}
+
+func (this *Context) Round(v float64, p int) float64 { // {{{
+	var rounder float64
+	intermed := v * math.Pow(10, float64(p))
+
+	if v >= 0.5 {
+		rounder = math.Ceil(intermed)
+	} else {
+		rounder = math.Floor(intermed)
+	}
+
+	return rounder / math.Pow(10, float64(p))
+} // }}}
+
+// [Memory]
+
+func (this *Context) MemoryFormat(size uint64) string { // {{{
+	s := float64(size)
+	b := float64(1024)
+
+	units := []string{"B", "Kb", "Mb", "Gb", "Tb", "Pb"}
+	if size == 0 {
+		return fmt.Sprintf(MEMORY_TEMPLATE, s, units[size])
+	} else {
+		i := math.Floor(this.Log(s, b))
+
+		return fmt.Sprintf(MEMORY_TEMPLATE, (s / math.Pow(b, i)), units[int(i)])
+	}
+} // }}}
+
+/**
+ * General statistics.
+ * [runtime.MemStats.Alloc] - bytes allocated and still in use
+ *
+ * Main allocation heap statistics.
+ * [runtime.MemStats.HeapAlloc] - bytes allocated and still in use
+ */
+func (this *Context) MemoryUsage() string { // {{{
+	ms := &runtime.MemStats{}
+	runtime.ReadMemStats(ms)
+
+	return this.MemoryFormat(ms.Alloc)
 } // }}}
