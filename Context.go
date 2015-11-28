@@ -257,7 +257,7 @@ func (this *Context) AddController(controller IController) error { // {{{
 			controller.Configure(request)
 			if err = controller.Prepare(); err != nil {
 				log.Printf("Cannot prepare controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
-				controller.Error(writer)
+				controller.RenderError(writer)
 			} else {
 				if err = controller.Render(writer); err != nil {
 					log.Printf("Cannot render controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)

@@ -8,20 +8,24 @@ import (
 
 type IController interface {
 	// [Context]
-	Context() *Context
 	HasContext() bool
+	Context() *Context
 
 	// [Request]
-	Request() *http.Request
 	HasRequest() bool
+	Request() *http.Request
+
+	// [Error]
+	HasError() bool
+	Error() string
 
 	// [Controller]
 	Initialize(context *Context)
 	Register(router *mux.Router) *mux.Route
 	Configure(request *http.Request)
 	Prepare() error
-	Render(writer http.ResponseWriter) error
 
-	// [Error]
-	Error(writer http.ResponseWriter)
+	// [Render]
+	Render(writer http.ResponseWriter) error
+	RenderError(writer http.ResponseWriter)
 }
