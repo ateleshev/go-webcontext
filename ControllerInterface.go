@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type IController interface {
+type ControllerInterface interface {
 	// [Context]
 	HasContext() bool
 	Context() *Context

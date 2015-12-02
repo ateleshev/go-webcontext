@@ -13,8 +13,9 @@ func NewServerConfig() *ServerConfig { // {{{
 type ServerConfig struct {
 	config
 
-	Host string
-	Port int
+	Host             string
+	Port             int
+	NumServerWorkers int
 }
 
 func (this *ServerConfig) Name() string { // {{{

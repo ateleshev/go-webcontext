@@ -4,17 +4,11 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"net"
 	"net/http"
-	"net/http/fcgi"
 	"reflect"
 	"runtime"
 	"sync"
 	"time"
-
-	_ "github.com/go-sql-driver/mysql"
-	// _ "github.com/lib/pq"
-	// _ "github.com/mattn/go-sqlite3"
 
 	"github.com/gorilla/mux" // http://www.gorillatoolkit.org/pkg/mux
 	"github.com/jinzhu/gorm" // https://godoc.org/github.com/jinzhu/gorm
@@ -27,7 +21,8 @@ const (
 	TIME_FORMAT      = "15:04:05"
 	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
 
-	DEFAULT_SERVER_ADDR = "0.0.0.0:8090"
+	DEFAULT_SERVER_ADDR        = "0.0.0.0:8090"
+	DEFAULT_NUM_SERVER_WORKERS = 200
 
 	NAMESPACE            = "common"
 	NAMESPACE_REPOSITORY = "repository"
@@ -43,37 +38,39 @@ type Context struct {
 	server    *http.Server // HttpServer (https://golang.org/pkg/net/http)
 	router    *mux.Router  // GorillaMux (http://www.gorillatoolkit.org/pkg/mux)
 	db        *gorm.DB     // GORM (https://godoc.org/github.com/jinzhu/gorm)
-
-	data map[string]interface{}
+	data      ContextNamespaceData
 }
 
 // == Protected ==
 
-func buildKey(NAMESPACE string, name string) string { // {{{
-	return fmt.Sprintf("%s::%s", NAMESPACE, name)
-} // }}}
-
-func (this *Context) has(key string) bool { // {{{
-	_, ok := this.data[key]
+func (this *Context) has(ns string, key string) bool { // {{{
+	var ok bool
+	if _, ok = this.data[ns]; ok {
+		_, ok = this.data[ns][key]
+	}
 
 	return ok
 } // }}}
 
-func (this *Context) set(key string, value interface{}) bool { // {{{
-	if this.Has(key) {
-		return false
-	}
-
+func (this *Context) set(ns string, key string, value interface{}) bool { // {{{
 	this.Lock()
 	defer this.Unlock()
 
-	this.data[key] = value
+	if _, ok := this.data[ns]; !ok {
+		this.data[ns] = make(ContextData)
+	}
+
+	this.data[ns][key] = value
 
 	return true
 } // }}}
 
-func (this *Context) get(key string) interface{} { // {{{
-	return this.data[key]
+func (this *Context) get(ns string, key string) interface{} { // {{{
+	if !this.has(ns, key) {
+		return nil
+	}
+
+	return this.data[ns][key]
 } // }}}
 
 // == Static ==
@@ -81,7 +78,7 @@ func (this *Context) get(key string) interface{} { // {{{
 func NewContext() *Context { // {{{
 	return &Context{
 		startedAt: time.Now(),
-		data:      make(map[string]interface{}, 0),
+		data:      make(ContextNamespaceData, 0),
 	}
 } // }}}
 
@@ -123,16 +120,6 @@ func (this *Context) Init(config *Config) error { // {{{
 
 	// [Router]
 	this.SetRouter(mux.NewRouter())
-
-	// [Server]
-
-	server := &http.Server{Addr: DEFAULT_SERVER_ADDR}
-
-	if config.HasServer() {
-		server.Addr = config.Server.Addr()
-	}
-
-	this.SetServer(server)
 
 	// [Database]
 
@@ -195,20 +182,22 @@ func (this *Context) Config() *Config { // {{{
 
 // [Server]
 
-func (this *Context) HasServer() bool { // {{{
-	return this.server != nil
+func (this *Context) IsServerType(serverType string) bool { // {{{
+	config := this.Config()
+	if config.HasMain() {
+		return config.Main.IsServerType(serverType)
+	}
+
+	return false
 } // }}}
 
-func (this *Context) SetServer(server *http.Server) bool { // {{{
-	this.Lock()
-	defer this.Unlock()
+func (this *Context) NumServerWorkers() int { // {{{
+	config := this.Config()
+	if config.HasServer() && config.Server.NumServerWorkers > 0 {
+		return config.Server.NumServerWorkers
+	}
 
-	this.server = server
-	return true
-} // }}}
-
-func (this *Context) Server() *http.Server { // {{{
-	return this.server
+	return DEFAULT_NUM_SERVER_WORKERS
 } // }}}
 
 // [Router]
@@ -227,6 +216,14 @@ func (this *Context) SetRouter(router *mux.Router) bool { // {{{
 
 func (this *Context) Router() *mux.Router { // {{{
 	return this.router
+} // }}}
+
+func (this *Context) Addr() string { // {{{
+	if this.Config().HasServer() {
+		return this.Config().Server.Addr()
+	}
+
+	return DEFAULT_SERVER_ADDR
 } // }}}
 
 // [DB]
@@ -249,10 +246,11 @@ func (this *Context) DB() *gorm.DB { // {{{
 
 // [Controllers]
 
-func (this *Context) AddController(controller IController) error { // {{{
+func (this *Context) AddController(controller ControllerInterface) error { // {{{
 	controller.Initialize(this)
 	if router := this.Router(); router != nil {
-		controller.Register(router).HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		route := controller.Register(router)
+		route.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 			var err error
 			controller.Configure(request)
 			if err = controller.Prepare(); err != nil {
@@ -273,74 +271,33 @@ func (this *Context) AddController(controller IController) error { // {{{
 // [Data]
 
 func (this *Context) Has(name string) bool { // {{{
-	return this.has(buildKey(NAMESPACE, name))
+	return this.has(NAMESPACE, name)
 } // }}}
 
 func (this *Context) Set(name string, value interface{}) bool { // {{{
-	return this.set(buildKey(NAMESPACE, name), value)
+	return this.set(NAMESPACE, name, value)
 } // }}}
 
 func (this *Context) Get(name string) interface{} { // {{{
-	return this.get(buildKey(NAMESPACE, name))
+	return this.get(NAMESPACE, name)
 } // }}}
 
 // [Repository]
 
 func (this *Context) HasRepository(name string) bool { // {{{
-	return this.has(buildKey(NAMESPACE_REPOSITORY, name))
+	return this.has(NAMESPACE_REPOSITORY, name)
 } // }}}
 
 func (this *Context) SetRepository(name string, repository *repository.Repository) bool { // {{{
-	return this.set(buildKey(NAMESPACE_REPOSITORY, name), repository)
+	return this.set(NAMESPACE_REPOSITORY, name, repository)
 } // }}}
 
 func (this *Context) Repository(name string) *repository.Repository { // {{{
-	if !this.has(buildKey(NAMESPACE_REPOSITORY, name)) {
+	if !this.has(NAMESPACE_REPOSITORY, name) {
 		return nil
 	}
 
-	return this.get(buildKey(NAMESPACE_REPOSITORY, name)).(*repository.Repository)
-} // }}}
-
-// [Handle]
-
-func (this *Context) Handle() { // {{{
-	server := this.Server()
-	server.Handler = this.Router()
-} // }}}
-
-func (this *Context) ListenAndServe() { // {{{
-	config := this.Config()
-	if config.HasMain() && config.Main.IsServerType(SERVER_TYPE_FCGI) {
-		this.fcgiListenAndServe()
-	} else {
-		this.httpListenAndServe()
-	}
-} // }}}
-
-func (this *Context) fcgiListenAndServe() { // {{{
-	server := this.Server()
-
-	log.Printf("Start FCGI Server (fcgi://%s)", server.Addr)
-	listener, err := net.Listen("tcp", server.Addr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer listener.Close()
-
-	log.Fatal(fcgi.Serve(listener, server.Handler))
-} // }}}
-
-func (this *Context) httpListenAndServe() { // {{{
-	server := this.Server()
-
-	log.Printf("Start HTTP Server (http://%s)", server.Addr)
-	log.Fatal(server.ListenAndServe())
-} // }}}
-
-func (this *Context) Dispatch() { // {{{
-	this.Handle()
-	this.ListenAndServe()
+	return this.get(NAMESPACE_REPOSITORY, name).(*repository.Repository)
 } // }}}
 
 // [Math]
