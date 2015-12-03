@@ -3,29 +3,18 @@ package webcontext
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/gorilla/mux" // http://www.gorillatoolkit.org/pkg/mux
 )
 
 type ControllerInterface interface {
-	// [Context]
-	HasContext() bool
+	New() ControllerInterface
 	Context() *Context
 
-	// [Request]
-	HasRequest() bool
-	Request() *http.Request
+	// [Initialization]
+	Initialize(*Context)
+	Register(*mux.Route)
 
-	// [Error]
-	HasError() bool
-	Error() string
-
-	// [Controller]
-	Initialize(context *Context)
-	Register(router *mux.Router) *mux.Route
-	Configure(request *http.Request)
+	// [Execution]
 	Prepare() error
-
-	// [Render]
-	Render(writer http.ResponseWriter) error
-	RenderError(writer http.ResponseWriter)
+	Execute(*http.Request) ViewInterface
 }

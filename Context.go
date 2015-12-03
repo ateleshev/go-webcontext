@@ -30,15 +30,35 @@ const (
 	MEMORY_TEMPLATE = "%.3f%s"
 )
 
+func NewContext(router *mux.Router) *Context { // {{{
+	return &Context{
+		startedAt: time.Now(),
+		router:    router,
+		data:      make(ContextNamespaceData, 0),
+	}
+} // }}}
+
+func CreateContext(router *mux.Router, configPath string) (*Context, error) { // {{{
+	context := NewContext(router)
+
+	config, errs := LoadConfig(configPath)
+	if errs != nil && errs.Len() > 0 {
+		for name, err := range *errs {
+			log.Printf("Config '%s' is not loaded. Details: %v", name, err)
+		}
+	}
+
+	return context, context.Init(config)
+} // }}}
+
 type Context struct {
 	sync.Mutex
 
 	startedAt time.Time
-	config    *Config      // App configuration
-	server    *http.Server // HttpServer (https://golang.org/pkg/net/http)
-	router    *mux.Router  // GorillaMux (http://www.gorillatoolkit.org/pkg/mux)
-	db        *gorm.DB     // GORM (https://godoc.org/github.com/jinzhu/gorm)
-	data      ContextNamespaceData
+	config    *Config              // App configuration
+	router    *mux.Router          // GorillaMux (http://www.gorillatoolkit.org/pkg/mux)
+	db        *gorm.DB             // GORM (https://godoc.org/github.com/jinzhu/gorm)
+	data      ContextNamespaceData // Namespaced data
 }
 
 // == Protected ==
@@ -73,29 +93,7 @@ func (this *Context) get(ns string, key string) interface{} { // {{{
 	return this.data[ns][key]
 } // }}}
 
-// == Static ==
-
-func NewContext() *Context { // {{{
-	return &Context{
-		startedAt: time.Now(),
-		data:      make(ContextNamespaceData, 0),
-	}
-} // }}}
-
 // == Public ==
-
-func CreateContext(configPath string) (*Context, error) { // {{{
-	context := NewContext()
-
-	config, errs := LoadConfig(configPath)
-	if errs != nil && errs.Len() > 0 {
-		for name, err := range *errs {
-			log.Printf("Config '%s' is not loaded. Details: %v", name, err)
-		}
-	}
-
-	return context, context.Init(config)
-} // }}}
 
 func (this *Context) Init(config *Config) error { // {{{
 	var err error
@@ -117,9 +115,6 @@ func (this *Context) Init(config *Config) error { // {{{
 			break
 		}
 	}
-
-	// [Router]
-	this.SetRouter(mux.NewRouter())
 
 	// [Database]
 
@@ -249,16 +244,17 @@ func (this *Context) DB() *gorm.DB { // {{{
 func (this *Context) AddController(controller ControllerInterface) error { // {{{
 	controller.Initialize(this)
 	if router := this.Router(); router != nil {
-		route := controller.Register(router)
-		route.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-			var err error
-			controller.Configure(request)
-			if err = controller.Prepare(); err != nil {
-				log.Printf("Cannot prepare controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
-				controller.RenderError(writer)
+		route := router.NewRoute()
+		controller.Register(route)
+		route.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
+			c := controller.New()
+			if err := c.Prepare(); err != nil {
+				log.Printf("Cannot prepare controller '%v'. Error: '%v'", reflect.TypeOf(c), err)
+				http.Error(responseWriter, "Forbidden", http.StatusForbidden) // @TODO: Add error
 			} else {
-				if err = controller.Render(writer); err != nil {
-					log.Printf("Cannot render controller '%v'. Error: '%v'", reflect.TypeOf(controller), err)
+				view := c.Execute(request)
+				if err := view.Render(responseWriter); err != nil {
+					log.Printf("Cannot render view '%v'. Error: '%v'", reflect.TypeOf(view), err)
 				}
 			}
 		})
