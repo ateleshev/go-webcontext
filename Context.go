@@ -22,6 +22,7 @@ const (
 	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
 
 	DEFAULT_SERVER_ADDR        = "0.0.0.0:8090"
+	DEFAULT_NUM_WORKER_TASKS   = 5
 	DEFAULT_NUM_SERVER_WORKERS = 200
 
 	NAMESPACE            = "common"
@@ -186,6 +187,15 @@ func (this *Context) IsServerType(serverType string) bool { // {{{
 	return false
 } // }}}
 
+func (this *Context) NumWorkerTasks() int { // {{{
+	config := this.Config()
+	if config.HasServer() && config.Server.NumWorkerTasks > 0 {
+		return config.Server.NumWorkerTasks
+	}
+
+	return DEFAULT_NUM_WORKER_TASKS
+} // }}}
+
 func (this *Context) NumServerWorkers() int { // {{{
 	config := this.Config()
 	if config.HasServer() && config.Server.NumServerWorkers > 0 {
@@ -193,6 +203,20 @@ func (this *Context) NumServerWorkers() int { // {{{
 	}
 
 	return DEFAULT_NUM_SERVER_WORKERS
+} // }}}
+
+/**
+ * Depth of tasks queue
+ */
+func (this *Context) DepthTasksQueue() int { // {{{
+	return this.NumWorkerTasks() * this.NumServerWorkers()
+} // }}}
+
+/**
+ * Depth of workers queue
+ */
+func (this *Context) DepthWorkersQueue() int { // {{{
+	return this.NumServerWorkers()
 } // }}}
 
 // [Router]

@@ -17,8 +17,8 @@ func NewServer(context *Context, name string) *Server { // {{{
 		shutdown: make(chan bool),
 		// [Public]
 		Context:     context,
-		QueryQueue:  make(QueryQueue),
-		WorkerQueue: make(queue.WorkerQueue),
+		QueryQueue:  make(QueryQueue, context.DepthTasksQueue()),
+		WorkerQueue: make(queue.WorkerQueue, context.DepthWorkersQueue()),
 	}
 } // }}}
 

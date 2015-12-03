@@ -15,7 +15,9 @@ type ServerConfig struct {
 
 	Host             string
 	Port             int
-	NumServerWorkers int
+	NumWorkerTasks   int // Number of worker tasks (per worker)
+	NumServerWorkers int // Number of server workers
+	LogMode          bool
 }
 
 func (this *ServerConfig) Name() string { // {{{
