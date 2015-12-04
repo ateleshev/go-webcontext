@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm" // https://godoc.org/github.com/jinzhu/gorm
 
 	"github.com/ArtemTeleshev/go-repository"
+	"github.com/ArtemTeleshev/go-webconfig"
 )
 
 const (
@@ -29,6 +30,9 @@ const (
 	NAMESPACE_REPOSITORY = "repository"
 
 	MEMORY_TEMPLATE = "%.3f%s"
+
+	SERVER_TYPE_HTML = "HTML"
+	SERVER_TYPE_FCGI = "FCGI"
 )
 
 func NewContext(router *mux.Router) *Context { // {{{
@@ -42,7 +46,7 @@ func NewContext(router *mux.Router) *Context { // {{{
 func CreateContext(router *mux.Router, configPath string) (*Context, error) { // {{{
 	context := NewContext(router)
 
-	config, errs := LoadConfig(configPath)
+	config, errs := webconfig.LoadConfig(configPath)
 	if errs != nil && errs.Len() > 0 {
 		for name, err := range *errs {
 			log.Printf("Config '%s' is not loaded. Details: %v", name, err)
@@ -56,7 +60,7 @@ type Context struct {
 	sync.Mutex
 
 	startedAt time.Time
-	config    *Config              // App configuration
+	config    *webconfig.Config    // App configuration
 	router    *mux.Router          // GorillaMux (http://www.gorillatoolkit.org/pkg/mux)
 	db        *gorm.DB             // GORM (https://godoc.org/github.com/jinzhu/gorm)
 	data      ContextNamespaceData // Namespaced data
@@ -96,7 +100,7 @@ func (this *Context) get(ns string, key string) interface{} { // {{{
 
 // == Public ==
 
-func (this *Context) Initialize(config *Config) error { // {{{
+func (this *Context) Initialize(config *webconfig.Config) error { // {{{
 	var err error
 	this.SetConfig(config)
 
@@ -164,7 +168,7 @@ func (this *Context) HasConfig() bool { // {{{
 	return this.config != nil
 } // }}}
 
-func (this *Context) SetConfig(config *Config) bool { // {{{
+func (this *Context) SetConfig(config *webconfig.Config) bool { // {{{
 	this.Lock()
 	defer this.Unlock()
 
@@ -172,7 +176,7 @@ func (this *Context) SetConfig(config *Config) bool { // {{{
 	return true
 } // }}}
 
-func (this *Context) Config() *Config { // {{{
+func (this *Context) Config() *webconfig.Config { // {{{
 	return this.config
 } // }}}
 
