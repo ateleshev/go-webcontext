@@ -15,7 +15,7 @@ type ServerConfig struct {
 
 	Host             string
 	Port             int
-	NumWorkerTasks   int // Number of worker tasks (per worker)
+	NumWorkerJobs    int // Number of worker Jobs (per worker)
 	NumServerWorkers int // Number of server workers
 	LogMode          bool
 }

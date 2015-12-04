@@ -22,7 +22,7 @@ const (
 	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
 
 	DEFAULT_SERVER_ADDR        = "0.0.0.0:8090"
-	DEFAULT_NUM_WORKER_TASKS   = 5
+	DEFAULT_NUM_WORKER_JOBS    = 5
 	DEFAULT_NUM_SERVER_WORKERS = 200
 
 	NAMESPACE            = "common"
@@ -187,13 +187,13 @@ func (this *Context) IsServerType(serverType string) bool { // {{{
 	return false
 } // }}}
 
-func (this *Context) NumWorkerTasks() int { // {{{
+func (this *Context) NumWorkerJobs() int { // {{{
 	config := this.Config()
-	if config.HasServer() && config.Server.NumWorkerTasks > 0 {
-		return config.Server.NumWorkerTasks
+	if config.HasServer() && config.Server.NumWorkerJobs > 0 {
+		return config.Server.NumWorkerJobs
 	}
 
-	return DEFAULT_NUM_WORKER_TASKS
+	return DEFAULT_NUM_WORKER_JOBS
 } // }}}
 
 func (this *Context) NumServerWorkers() int { // {{{
@@ -206,10 +206,10 @@ func (this *Context) NumServerWorkers() int { // {{{
 } // }}}
 
 /**
- * Depth of tasks queue
+ * Depth of Jobs queue
  */
-func (this *Context) DepthTasksQueue() int { // {{{
-	return this.NumWorkerTasks() * this.NumServerWorkers()
+func (this *Context) DepthJobsQueue() int { // {{{
+	return this.NumWorkerJobs() * this.NumServerWorkers()
 } // }}}
 
 /**

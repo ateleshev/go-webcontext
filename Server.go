@@ -14,7 +14,7 @@ func NewServer(context *Context, name string) *Server { // {{{
 	return &Server{
 		name:        name,
 		context:     context,
-		queueServer: queue.NewServer(name, context.DepthTasksQueue(), context.DepthWorkersQueue()),
+		queueServer: queue.NewServer(name, context.DepthJobsQueue(), context.DepthWorkersQueue()),
 	}
 } // }}}
 
