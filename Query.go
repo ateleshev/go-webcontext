@@ -14,7 +14,7 @@ func NewQuery(context *Context, responseWriter http.ResponseWriter, request *htt
 		ResponseWriter: responseWriter,
 	}
 
-	query.Init()
+	query.Initialize()
 
 	return query
 } // }}}

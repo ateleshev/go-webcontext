@@ -49,7 +49,7 @@ func CreateContext(router *mux.Router, configPath string) (*Context, error) { //
 		}
 	}
 
-	return context, context.Init(config)
+	return context, context.Initialize(config)
 } // }}}
 
 type Context struct {
@@ -96,7 +96,7 @@ func (this *Context) get(ns string, key string) interface{} { // {{{
 
 // == Public ==
 
-func (this *Context) Init(config *Config) error { // {{{
+func (this *Context) Initialize(config *Config) error { // {{{
 	var err error
 	this.SetConfig(config)
 
