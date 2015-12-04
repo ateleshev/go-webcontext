@@ -5,7 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/fcgi"
-	//	"time"
+	"time"
 
 	"github.com/ArtemTeleshev/go-queue"
 )
@@ -15,6 +15,8 @@ func NewServer(context *Context, name string) *Server { // {{{
 		name:        name,
 		context:     context,
 		queueServer: queue.NewServer(name, context.DepthJobsQueue(), context.DepthWorkersQueue()),
+		// Timing
+		startedAt: time.Now(),
 	}
 } // }}}
 
@@ -22,9 +24,14 @@ type Server struct {
 	http.Server
 
 	name        string
-	queueServer *queue.Server
 	context     *Context
-	accessLog   *log.Logger
+	queueServer *queue.Server
+
+	// Logging
+	accessLog *log.Logger
+
+	// Timing
+	startedAt time.Time
 }
 
 // == fcgi/http ==
@@ -47,9 +54,6 @@ func (this *Server) Name() string { // {{{
 
 func (this *Server) Run() { // {{{
 	this.queueServer.Start()
-
-	//	this.startWorkers()
-	//	go this.dispatch()
 
 	if this.Addr == "" {
 		this.Addr = this.context.Addr()
