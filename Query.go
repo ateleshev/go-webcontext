@@ -27,11 +27,12 @@ type Query struct {
 	ResponseWriter http.ResponseWriter
 }
 
-func (this *Query) Execute() { // {{{
+func (this *Query) Execute(w interface{}) { // {{{
+	worker := w.(*queue.Worker)
 	if this.Context.HasRouter() {
 		this.Context.Router().ServeHTTP(this.ResponseWriter, this.Request)
-		// log.Printf("[Query] Execute Query\n")
+		log.Printf("[Query:%s#%d] Execute HTTP Request\n", worker.Name(), worker.Id())
 	} else {
-		log.Printf("[Query] Router not found\n")
+		log.Printf("[Query:%s#%d] Router not found\n", worker.Name(), worker.Id())
 	}
 } // }}}
