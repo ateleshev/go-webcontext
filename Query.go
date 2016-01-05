@@ -3,6 +3,7 @@ package webcontext
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/ArtemTeleshev/go-queue"
 )
@@ -29,10 +30,14 @@ type Query struct {
 
 func (this *Query) Execute(w interface{}) { // {{{
 	worker := w.(*queue.Worker)
+
 	if this.Context.HasRouter() {
+		startedAt := time.Now()
 		this.Context.Router().ServeHTTP(this.ResponseWriter, this.Request)
-		log.Printf("[Query:%s#%d] Execute HTTP Request\n", worker.Name(), worker.Id())
+		finishedAt := time.Now()
+
+		log.Printf("[Query:%s] Execute HTTP Request [%.4fs]\n", worker.Info(), finishedAt.Sub(startedAt).Seconds())
 	} else {
-		log.Printf("[Query:%s#%d] Router not found\n", worker.Name(), worker.Id())
+		log.Printf("[QueryError:%s] Router not found\n", worker.Info())
 	}
 } // }}}

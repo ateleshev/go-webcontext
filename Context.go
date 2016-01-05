@@ -22,9 +22,9 @@ const (
 	TIME_FORMAT      = "15:04:05"
 	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
 
-	DEFAULT_SERVER_ADDR        = "0.0.0.0:8090"
-	DEFAULT_NUM_WORKER_JOBS    = 5
-	DEFAULT_NUM_SERVER_WORKERS = 200
+	DEFAULT_SERVER_ADDR = "0.0.0.0:8090"
+	DEFAULT_POOL_SIZE   = 2
+	DEFAULT_QUEUE_SIZE  = 50
 
 	NAMESPACE            = "common"
 	NAMESPACE_REPOSITORY = "repository"
@@ -191,36 +191,28 @@ func (this *Context) IsServerType(serverType string) bool { // {{{
 	return false
 } // }}}
 
-func (this *Context) NumWorkerJobs() int { // {{{
+/**
+ * Pool size
+ */
+func (this *Context) PoolSize() int { // {{{
 	config := this.Config()
-	if config.HasServer() && config.Server.NumWorkerJobs > 0 {
-		return config.Server.NumWorkerJobs
+	if config.HasServer() && config.Server.PoolSize > 0 {
+		return config.Server.PoolSize
 	}
 
-	return DEFAULT_NUM_WORKER_JOBS
-} // }}}
-
-func (this *Context) NumServerWorkers() int { // {{{
-	config := this.Config()
-	if config.HasServer() && config.Server.NumServerWorkers > 0 {
-		return config.Server.NumServerWorkers
-	}
-
-	return DEFAULT_NUM_SERVER_WORKERS
+	return DEFAULT_POOL_SIZE
 } // }}}
 
 /**
- * Depth of Jobs queue
+ * Queue size
  */
-func (this *Context) DepthJobsQueue() int { // {{{
-	return this.NumWorkerJobs() * this.NumServerWorkers()
-} // }}}
+func (this *Context) QueueSize() int { // {{{
+	config := this.Config()
+	if config.HasServer() && config.Server.QueueSize > 0 {
+		return config.Server.QueueSize
+	}
 
-/**
- * Depth of workers queue
- */
-func (this *Context) DepthWorkersQueue() int { // {{{
-	return this.NumServerWorkers()
+	return DEFAULT_QUEUE_SIZE
 } // }}}
 
 // [Router]
