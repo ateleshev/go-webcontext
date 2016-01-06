@@ -23,15 +23,15 @@ const (
 	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
 
 	DEFAULT_SERVER_ADDR = "0.0.0.0:8090"
-	DEFAULT_POOL_SIZE   = 2
-	DEFAULT_QUEUE_SIZE  = 50
+	DEFAULT_POOL_SIZE   = 4
+	DEFAULT_QUEUE_SIZE  = 100
 
 	NAMESPACE            = "common"
 	NAMESPACE_REPOSITORY = "repository"
 
 	MEMORY_TEMPLATE = "%.3f%s"
 
-	SERVER_TYPE_HTML = "HTML"
+	SERVER_TYPE_HTTP = "HTTP"
 	SERVER_TYPE_FCGI = "FCGI"
 )
 
@@ -43,10 +43,10 @@ func NewContext(router *mux.Router) *Context { // {{{
 	}
 } // }}}
 
-func CreateContext(router *mux.Router, configPath string) (*Context, error) { // {{{
+func CreateContext(router *mux.Router, appConfig webconfig.ConfigInterface, configPath string) (*Context, error) { // {{{
 	context := NewContext(router)
 
-	config, errs := webconfig.LoadConfig(configPath)
+	config, errs := webconfig.LoadConfig(appConfig, configPath)
 	if errs != nil && errs.Len() > 0 {
 		for name, err := range *errs {
 			log.Printf("Config '%s' is not loaded. Details: %v", name, err)

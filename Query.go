@@ -36,7 +36,12 @@ func (this *Query) Execute(w interface{}) { // {{{
 		this.Context.Router().ServeHTTP(this.ResponseWriter, this.Request)
 		finishedAt := time.Now()
 
-		log.Printf("[Query:%s] Execute HTTP Request [%.4fs]\n", worker.Info(), finishedAt.Sub(startedAt).Seconds())
+		serverType := SERVER_TYPE_HTTP
+		if this.Context.HasConfig() && this.Context.Config().HasMain() {
+			serverType = this.Context.Config().Main.ServerType
+		}
+
+		log.Printf("[Query:%s] Execute %s Request [%.4fs]\n", worker.Info(), serverType, finishedAt.Sub(startedAt).Seconds())
 	} else {
 		log.Printf("[QueryError:%s] Router not found\n", worker.Info())
 	}
