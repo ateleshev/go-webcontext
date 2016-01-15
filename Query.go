@@ -8,19 +8,19 @@ import (
 	"github.com/ArtemTeleshev/go-queue"
 )
 
-func NewQuery(context *Context, responseWriter http.ResponseWriter, request *http.Request) *Query { // {{{
-	query := &Query{
+func NewQueryJob(context *Context, responseWriter http.ResponseWriter, request *http.Request) *QueryJob { // {{{
+	job := &QueryJob{
 		Context:        context,
 		Request:        request,
 		ResponseWriter: responseWriter,
 	}
 
-	query.Initialize()
+	job.Initialize()
 
-	return query
+	return job
 } // }}}
 
-type Query struct {
+type QueryJob struct {
 	queue.Job
 
 	Context        *Context
@@ -28,7 +28,7 @@ type Query struct {
 	ResponseWriter http.ResponseWriter
 }
 
-func (this *Query) Execute(w interface{}) { // {{{
+func (this *QueryJob) Execute(w interface{}) { // {{{
 	worker := w.(*queue.Worker)
 
 	if this.Context.HasRouter() {
@@ -41,8 +41,8 @@ func (this *Query) Execute(w interface{}) { // {{{
 			serverType = this.Context.Config().Main.ServerType
 		}
 
-		log.Printf("[Query:%s] Execute %s Request [%.4fs]\n", worker.Info(), serverType, finishedAt.Sub(startedAt).Seconds())
+		log.Printf("[QueryJob:%s] Execute %s Request [%.4fs]\n", worker.Info(), serverType, finishedAt.Sub(startedAt).Seconds())
 	} else {
-		log.Printf("[QueryError:%s] Router not found\n", worker.Info())
+		log.Printf("[QueryJobError:%s] Router not found\n", worker.Info())
 	}
 } // }}}
