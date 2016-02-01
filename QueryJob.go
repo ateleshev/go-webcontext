@@ -43,6 +43,6 @@ func (this *QueryJob) Execute(w interface{}) { // {{{
 
 		go log.Printf("[QueryJob:%s] Execute %s Request [%.4fs]\n", worker.Info(), serverType, finishedAt.Sub(startedAt).Seconds())
 	} else {
-		go log.Printf("[QueryJobError:%s] Router not found\n", worker.Info())
+		go log.Printf("[Error:QueryJob:%s] Router not found\n", worker.Info())
 	}
 } // }}}
