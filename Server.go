@@ -85,8 +85,8 @@ func (this *Server) Stop() { // {{{
 } // }}}
 
 func (this *Server) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) { // {{{
-	query := NewQuery(this.context, responseWriter, request)
-	this.queueServer.Dispatch(query)
-	query.Wait() // Waiting without timeout
-	// query.WaitDeadline(time.Minute)
+	job := NewQueryJob(this.context, responseWriter, request)
+	this.queueServer.Dispatch(job)
+	job.Wait() // Waiting without timeout
+	// job.WaitDeadline(time.Minute)
 } // }}}

@@ -31,8 +31,8 @@ const (
 
 	MEMORY_TEMPLATE = "%.3f%s"
 
-	SERVER_TYPE_HTTP = "HTTP"
-	SERVER_TYPE_FCGI = "FCGI"
+	SERVER_TYPE_HTTP = "http"
+	SERVER_TYPE_FCGI = "fcgi"
 )
 
 func NewContext(router *mux.Router) *Context { // {{{
@@ -49,7 +49,7 @@ func CreateContext(router *mux.Router, appConfig webconfig.ConfigInterface, conf
 	config, errs := webconfig.LoadConfig(appConfig, configPath)
 	if errs != nil && errs.Len() > 0 {
 		for name, err := range *errs {
-			log.Printf("Config '%s' is not loaded. Details: %v", name, err)
+			go log.Printf("[Error:Context] Config '%s' is not loaded: %v\n", name, err)
 		}
 	}
 
@@ -269,19 +269,19 @@ func (this *Context) AddController(controller ControllerInterface) error { // {{
 		route.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 			c := controller.New()
 			if err := c.Prepare(); err != nil {
-				log.Printf("Cannot prepare controller '%v'. Error: '%v'", reflect.TypeOf(c), err)
+				go log.Printf("[Error:Context] Cannot prepare controller '%v': %v", reflect.TypeOf(c), err)
 				http.Error(responseWriter, "Forbidden", http.StatusForbidden) // @TODO: Add error
 			} else {
 				view := c.Execute(request)
 				if err := view.Render(responseWriter); err != nil {
-					log.Printf("Cannot render view '%v'. Error: '%v'", reflect.TypeOf(view), err)
+					go log.Printf("[Error:Context] Cannot render view '%v' %v", reflect.TypeOf(view), err)
 				}
 			}
 		})
 		return nil
 	}
 
-	return fmt.Errorf("Cannot register controller, the router not intialized in this context")
+	return fmt.Errorf("[Error:Context] Cannot register controller, the router not intialized in this context")
 } // }}}
 
 // [Data]
