@@ -101,7 +101,6 @@ func (this *Context) get(ns string, key string) interface{} { // {{{
 // == Public ==
 
 func (this *Context) Initialize(config *webconfig.Config) error { // {{{
-	var err error
 	this.SetConfig(config)
 
 	// [Main]
@@ -124,19 +123,20 @@ func (this *Context) Initialize(config *webconfig.Config) error { // {{{
 	// [Database]
 
 	if config.HasDatabase() {
-		var db gorm.DB
-		if db, err = gorm.Open(config.Database.Driver, config.Database.DSN); err != nil {
+		db, err := gorm.Open(config.Database.Driver, config.Database.DSN)
+		if err != nil {
 			return err
 		}
 
-		db.DB().Ping()
+		con := db.DB()
 
+		con.Ping()
 		if config.Database.MaxIdleConns > 0 {
-			db.DB().SetMaxIdleConns(config.Database.MaxIdleConns)
+			con.SetMaxIdleConns(config.Database.MaxIdleConns)
 		}
 
 		if config.Database.MaxOpenConns > 0 {
-			db.DB().SetMaxOpenConns(config.Database.MaxOpenConns)
+			con.SetMaxOpenConns(config.Database.MaxOpenConns)
 		}
 
 		db.SingularTable(config.Database.SingularTable)
@@ -144,7 +144,7 @@ func (this *Context) Initialize(config *webconfig.Config) error { // {{{
 		// Logger [Enable|Disable]
 		db.LogMode(config.Database.LogMode)
 
-		this.SetDB(&db)
+		this.SetDB(db)
 	}
 
 	return nil
