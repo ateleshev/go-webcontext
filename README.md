@@ -1,11 +1,11 @@
 # go-webcontext
 
 ```
-go get -u github.com/ArtemTeleshev/go-webcontext
+go get -u github.com/ateleshev/go-webcontext
 ```
 
 ```
-import "github.com/ArtemTeleshev/go-webcontext"
+import "github.com/ateleshev/go-webcontext"
 ```
 
 Usage:

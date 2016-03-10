@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ArtemTeleshev/go-queue"
+	"github.com/ateleshev/go-queue"
 )
 
 func NewQueryJob(context *Context, responseWriter http.ResponseWriter, request *http.Request) *QueryJob { // {{{

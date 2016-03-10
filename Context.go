@@ -13,8 +13,7 @@ import (
 	"github.com/gorilla/mux" // http://www.gorillatoolkit.org/pkg/mux
 	"github.com/jinzhu/gorm" // https://godoc.org/github.com/jinzhu/gorm
 
-	"github.com/ArtemTeleshev/go-repository"
-	"github.com/ArtemTeleshev/go-webconfig"
+	"github.com/ateleshev/go-webconfig"
 )
 
 const (
@@ -26,8 +25,7 @@ const (
 	DEFAULT_POOL_SIZE   = 4
 	DEFAULT_QUEUE_SIZE  = 100
 
-	NAMESPACE            = "common"
-	NAMESPACE_REPOSITORY = "repository"
+	NAMESPACE = "common"
 
 	MEMORY_TEMPLATE = "%.3f%s"
 
@@ -296,24 +294,6 @@ func (this *Context) Set(name string, value interface{}) bool { // {{{
 
 func (this *Context) Get(name string) interface{} { // {{{
 	return this.get(NAMESPACE, name)
-} // }}}
-
-// [Repository]
-
-func (this *Context) HasRepository(name string) bool { // {{{
-	return this.has(NAMESPACE_REPOSITORY, name)
-} // }}}
-
-func (this *Context) SetRepository(name string, repository *repository.Repository) bool { // {{{
-	return this.set(NAMESPACE_REPOSITORY, name, repository)
-} // }}}
-
-func (this *Context) Repository(name string) *repository.Repository { // {{{
-	if !this.has(NAMESPACE_REPOSITORY, name) {
-		return nil
-	}
-
-	return this.get(NAMESPACE_REPOSITORY, name).(*repository.Repository)
 } // }}}
 
 // [Math]

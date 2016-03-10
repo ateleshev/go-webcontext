@@ -7,7 +7,7 @@ import (
 	"net/http/fcgi"
 	"time"
 
-	"github.com/ArtemTeleshev/go-queue"
+	"github.com/ateleshev/go-queue"
 )
 
 func NewServer(context *Context, name string) *Server { // {{{
