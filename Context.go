@@ -21,6 +21,7 @@ const (
 	TIME_FORMAT      = "15:04:05"
 	DATE_TIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT
 
+	DEFAULT_SERVER_HOST = "localhost:8090"
 	DEFAULT_SERVER_ADDR = "0.0.0.0:8090"
 	DEFAULT_POOL_SIZE   = 4
 	DEFAULT_QUEUE_SIZE  = 100
@@ -233,10 +234,18 @@ func (this *Context) Router() *mux.Router { // {{{
 
 func (this *Context) Addr() string { // {{{
 	if this.Config().HasServer() {
-		return this.Config().Server.Addr()
+		return this.Config().Server.Addr
 	}
 
 	return DEFAULT_SERVER_ADDR
+} // }}}
+
+func (this *Context) Host() string { // {{{
+	if this.Config().HasServer() {
+		return this.Config().Server.Host
+	}
+
+	return DEFAULT_SERVER_HOST
 } // }}}
 
 // [DB]
