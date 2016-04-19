@@ -291,6 +291,12 @@ func (this *Context) AddController(controller ControllerInterface) error { // {{
 	return fmt.Errorf("[Error:Context] Cannot register controller, the router not intialized in this context")
 } // }}}
 
+func (this *Context) URL(path string) string { // {{{
+	return path
+} // }}}
+
+// [URL]
+
 // [Data]
 
 func (this *Context) Has(name string) bool { // {{{
