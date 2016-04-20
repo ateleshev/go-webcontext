@@ -249,6 +249,14 @@ func (this *Context) Host() string { // {{{
 	return DEFAULT_SERVER_HOST
 } // }}}
 
+func (this *Context) IsSecure() bool { // {{{
+	if this.Config().HasServer() {
+		return this.Config().Server.Secure
+	}
+
+	return false
+} // }}}
+
 // [DB]
 
 func (this *Context) HasDB() bool { // {{{
@@ -292,8 +300,17 @@ func (this *Context) AddController(controller ControllerInterface) error { // {{
 	return fmt.Errorf("[Error:Context] Cannot register controller, the router not intialized in this context")
 } // }}}
 
-func (this *Context) Url(path string, params map[string]string) string { // {{{
-	url := this.Host() + path
+// [URL]
+
+func (this *Context) Url(p string, params map[string]string) string { // {{{
+	var url string
+	var scheme string = "http"
+
+	if this.IsSecure() {
+		scheme = "https"
+	}
+
+	url = fmt.Sprintf("%s://", scheme, this.Host(), p)
 	if params != nil {
 		for k, v := range params {
 			url = strings.Replace(url, "{{"+k+"}}", v, 1)
@@ -302,8 +319,6 @@ func (this *Context) Url(path string, params map[string]string) string { // {{{
 
 	return url
 } // }}}
-
-// [URL]
 
 // [Data]
 
