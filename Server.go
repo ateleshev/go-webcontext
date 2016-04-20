@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/fcgi"
+	"runtime"
 	"time"
 
 	"github.com/ateleshev/go-queue"
@@ -37,12 +38,12 @@ type Server struct {
 // == fcgi/http ==
 
 func (this *Server) fcgiListenAndServe(listener net.Listener) { // {{{
-	log.Printf("[Server:%s] Start %s server ... (%s)", this.Name(), SERVER_TYPE_FCGI, this.context.Url("/", nil))
+	log.Printf("[Server:%s:%s] Start %s server ... (%s)", this.Name(), runtime.Version(), SERVER_TYPE_FCGI, this.context.Url("/", nil))
 	log.Fatal(fcgi.Serve(listener, this))
 } // }}}
 
 func (this *Server) httpListenAndServe(listener net.Listener) { // {{{
-	log.Printf("[Server:%s] Start %s server ... (%s)", this.Name(), SERVER_TYPE_HTTP, this.context.Url("/", nil))
+	log.Printf("[Server:%s:%s] Start %s server ... (%s)", this.Name(), runtime.Version(), SERVER_TYPE_HTTP, this.context.Url("/", nil))
 	log.Fatal(http.Serve(listener, this))
 } // }}}
 
