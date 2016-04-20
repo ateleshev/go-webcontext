@@ -310,7 +310,7 @@ func (this *Context) Url(p string, params map[string]string) string { // {{{
 		scheme = "https"
 	}
 
-	url = fmt.Sprintf("%s://", scheme, this.Host(), p)
+	url = fmt.Sprintf("%s://%s%s", scheme, this.Host(), p)
 	if params != nil {
 		for k, v := range params {
 			url = strings.Replace(url, "{{"+k+"}}", v, 1)
