@@ -37,12 +37,12 @@ type Server struct {
 // == fcgi/http ==
 
 func (this *Server) fcgiListenAndServe(listener net.Listener) { // {{{
-	log.Printf("[Server:%s] Start (fcgi://%s)", this.Name(), this.context.Host())
+	log.Printf("[Server:%s] Start %s server ... (%s)", this.Name(), SERVER_TYPE_FCGI, this.context.Url("/", nil))
 	log.Fatal(fcgi.Serve(listener, this))
 } // }}}
 
 func (this *Server) httpListenAndServe(listener net.Listener) { // {{{
-	log.Printf("[Server:%s] Start (http://%s)", this.Name(), this.context.Host())
+	log.Printf("[Server:%s] Start %s server ... (%s)", this.Name(), SERVER_TYPE_HTTP, this.context.Url("/", nil))
 	log.Fatal(http.Serve(listener, this))
 } // }}}
 
