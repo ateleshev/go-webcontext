@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"reflect"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -291,8 +292,15 @@ func (this *Context) AddController(controller ControllerInterface) error { // {{
 	return fmt.Errorf("[Error:Context] Cannot register controller, the router not intialized in this context")
 } // }}}
 
-func (this *Context) URL(path string) string { // {{{
-	return path
+func (this *Context) Url(path string, params map[string]string) string { // {{{
+	url := this.Host() + path
+	if params != nil {
+		for k, v := range params {
+			url = strings.Replace(url, "{{"+k+"}}", v, 1)
+		}
+	}
+
+	return url
 } // }}}
 
 // [URL]
