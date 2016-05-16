@@ -36,12 +36,7 @@ func (this *QueryJob) Execute(w interface{}) { // {{{
 		this.Context.Router().ServeHTTP(this.ResponseWriter, this.Request)
 		finishedAt := time.Now()
 
-		serverType := SERVER_TYPE_HTTP
-		if this.Context.HasConfig() && this.Context.Config().HasMain() {
-			serverType = this.Context.Config().Main.ServerType
-		}
-
-		go log.Printf("[QueryJob:%s] Execute %s Request [%.4fs]\n", worker.Info(), serverType, finishedAt.Sub(startedAt).Seconds())
+		go log.Printf("[QueryJob:%s] Executed: %v [%.4fs]\n", worker.Info(), this.Request.URL, finishedAt.Sub(startedAt).Seconds())
 	} else {
 		go log.Printf("[Error:QueryJob:%s] Router not found\n", worker.Info())
 	}
