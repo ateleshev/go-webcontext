@@ -3,6 +3,7 @@ package webcontext
 import (
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/ateleshev/go-queue"
@@ -15,6 +16,7 @@ func NewQueryJob(context *Context, responseWriter http.ResponseWriter, request *
 		ResponseWriter: responseWriter,
 	}
 
+	job.RemoteIp = strings.Split(request.RemoteAddr, ":")[0]
 	job.Initialize()
 
 	return job
@@ -26,6 +28,8 @@ type QueryJob struct {
 	Context        *Context
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
+
+	RemoteIp string
 }
 
 func (this *QueryJob) Execute(w interface{}) { // {{{
@@ -36,7 +40,7 @@ func (this *QueryJob) Execute(w interface{}) { // {{{
 		this.Context.Router().ServeHTTP(this.ResponseWriter, this.Request)
 		finishedAt := time.Now()
 
-		go log.Printf("[QueryJob:%s] %s %s: %v [%.4fs]\n", worker.Info(), this.Request.RemoteAddr, this.Request.Method, this.Request.URL, finishedAt.Sub(startedAt).Seconds())
+		go log.Printf("[QueryJob:%s] %s %s %v [%.4fs]\n", worker.Info(), this.RemoteIp, this.Request.Method, this.Request.URL, finishedAt.Sub(startedAt).Seconds())
 	} else {
 		go log.Printf("[Error:QueryJob:%s] Router not configured\n", worker.Info())
 	}
