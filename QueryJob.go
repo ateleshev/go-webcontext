@@ -40,8 +40,8 @@ func (this *QueryJob) Execute(w interface{}) { // {{{
 		this.Context.Router().ServeHTTP(this.ResponseWriter, this.Request)
 		finishedAt := time.Now()
 
-		go log.Printf("[%s|%s] %s %v [%.4fs]\n", worker.Info(), this.RemoteIp, this.Request.Method, this.Request.URL, finishedAt.Sub(startedAt).Seconds())
+		go log.Printf("%s [%s] %s %v [%.4fs]\n", this.RemoteIp, worker.Info(), this.Request.Method, this.Request.URL, finishedAt.Sub(startedAt).Seconds())
 	} else {
-		go log.Printf("[Error:%s] Router not configured\n", worker.Info())
+		go log.Printf("%s [%s:Error] Router not configured\n", this.RemoteIp, worker.Info())
 	}
 } // }}}
